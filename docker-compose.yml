@@ -1,0 +1,13 @@
+services:
+    db:
+        image: postgres
+        container_name: urlshort_postgres
+        restart: on-failure
+        environment:
+          POSTGRES_PASSWORD: urlshort
+          POSTGRES_USER: urlshort 
+          POSTGRES_DB: urlshort  
+        ports: 
+          - 5432:5432
+        volumes: 
+          - ./db/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
