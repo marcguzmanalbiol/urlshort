@@ -18,9 +18,14 @@ func Run(port string) {
 		DB: db.GetSQLPool(),
 	}
 
+	cacheRepo := db.CacheURLRepo{
+		DB:          sqlURLRepo,
+		RedisClient: db.GetRedisPool(),
+	}
+
 	urlHandler := api.URLHandler{
 		Port:    "8080",
-		URLRepo: sqlURLRepo,
+		URLRepo: cacheRepo,
 	}
 
 	r.HandleFunc("/", urlHandler.Home).Methods("GET")

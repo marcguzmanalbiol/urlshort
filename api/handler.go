@@ -144,8 +144,9 @@ func (h URLHandler) Redirect(w http.ResponseWriter, r *http.Request) {
 
 	if (models.URLMap{}) == result {
 		msg := "Short URL not found."
-		w.Write([]byte(msg))
 		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte(msg))
+		return
 	}
 
 	if result.ExpirationTime.Before(time.Now()) {
@@ -153,8 +154,9 @@ func (h URLHandler) Redirect(w http.ResponseWriter, r *http.Request) {
 
 		// TODO: Format messages and errors.
 
-		w.Write([]byte(msg))
 		w.WriteHeader(http.StatusGone)
+		w.Write([]byte(msg))
+		return
 	}
 
 	result.UsedCount++
