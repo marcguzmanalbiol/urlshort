@@ -16,9 +16,9 @@ const (
 	DB_NAME     = "urlshort"
 )
 
-var DB *sql.DB = InitDB()
+var postgresDB *sql.DB = InitPostgres()
 
-func InitDB() *sql.DB {
+func InitPostgres() *sql.DB {
 
 	log.Println("[postgres] Creating a postgres database connection.")
 
@@ -37,6 +37,6 @@ func InitDB() *sql.DB {
 
 }
 
-func GetPool() *sql.DB {
-	return DB
+func GetSQLPool() *sql.DB {
+	return postgresDB
 }

@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"urlshort/api"
 	"urlshort/db"
-	"urlshort/models"
 
 	"github.com/gorilla/mux"
 )
@@ -15,11 +14,13 @@ func Run(port string) {
 	log.Println("[server] Server is running on port", port)
 	r := mux.NewRouter()
 
+	sqlURLRepo := db.SQLRepo{
+		DB: db.GetSQLPool(),
+	}
+
 	urlHandler := api.URLHandler{
-		Port: "8080",
-		DB: models.DBRepo{
-			DB: db.GetPool(),
-		},
+		Port:    "8080",
+		URLRepo: sqlURLRepo,
 	}
 
 	r.HandleFunc("/", urlHandler.Home).Methods("GET")

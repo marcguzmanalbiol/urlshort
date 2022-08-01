@@ -16,8 +16,8 @@ import (
 )
 
 type URLHandler struct {
-	Port string
-	DB   models.DBRepo
+	Port    string
+	URLRepo models.URLRepository
 }
 
 func (h URLHandler) Home(w http.ResponseWriter, r *http.Request) {
@@ -102,7 +102,7 @@ func (h URLHandler) CreateShortURL(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: Format Errors
 
-	mapping := models.MapURL{
+	mapping := models.URLMap{
 		OriginalURL:    req.OriginalURL,
 		UsedCount:      0,
 		ExpirationTime: time.Now().Add(time.Hour),
@@ -110,7 +110,7 @@ func (h URLHandler) CreateShortURL(w http.ResponseWriter, r *http.Request) {
 
 	shortURL := utils.GenerateShortLink(req.OriginalURL)
 
-	err = h.DB.Save(shortURL, mapping)
+	err = h.URLRepo.Save(shortURL, mapping)
 	if err != nil {
 		msg := err.Error()
 		http.Error(w, msg, http.StatusInternalServerError)
@@ -135,9 +135,17 @@ func (h URLHandler) CreateShortURL(w http.ResponseWriter, r *http.Request) {
 func (h URLHandler) Redirect(w http.ResponseWriter, r *http.Request) {
 	shortURL := mux.Vars(r)["short_url"]
 
-	result, err := h.DB.Get(shortURL)
+	result, err := h.URLRepo.Get(shortURL)
 	if err != nil {
 		return
+	}
+
+	w.Header().Set("Cache-Control", "no-cache")
+
+	if (models.URLMap{}) == result {
+		msg := "Short URL not found."
+		w.Write([]byte(msg))
+		w.WriteHeader(http.StatusNotFound)
 	}
 
 	if result.ExpirationTime.Before(time.Now()) {
@@ -150,7 +158,13 @@ func (h URLHandler) Redirect(w http.ResponseWriter, r *http.Request) {
 	}
 
 	result.UsedCount++
-	// TODO: Update the DB
+	err = h.URLRepo.Update(shortURL, result)
+	if err != nil {
+		log.Println(
+			"[server] An error occurred when trying to update a register:",
+			err,
+		)
+	}
 
 	http.Redirect(w, r, result.OriginalURL, http.StatusMovedPermanently)
 
